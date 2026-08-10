@@ -1,5 +1,10 @@
 @props(['locations'])
 
+@php
+    $provinceOptions = $locations->pluck('province')->unique()->values();
+    $singleProvince = $provinceOptions->count() === 1 ? $provinceOptions->first() : null;
+@endphp
+
 <div
     x-data="{
         locations: {{ Illuminate\Support\Js::from($locations->map(fn ($location) => [
@@ -7,7 +12,7 @@
             'district' => $location->district,
             'neighborhood' => $location->neighborhood,
         ])) }},
-        province: {{ Illuminate\Support\Js::from(request('province', '')) }},
+        province: {{ Illuminate\Support\Js::from(request('province', $singleProvince ?? '')) }},
         district: {{ Illuminate\Support\Js::from(request('district', '')) }},
         neighborhood: {{ Illuminate\Support\Js::from(request('neighborhood', '')) }},
         get provinces() {
@@ -26,12 +31,16 @@
     }"
     class="contents"
 >
-    <select name="province" x-model="province" @change="district = ''; neighborhood = ''" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy">
-        <option value="">Tüm İller</option>
-        <template x-for="option in provinces" :key="option">
-            <option :value="option" x-text="option" :selected="option === province"></option>
-        </template>
-    </select>
+    @if ($singleProvince)
+        <input type="hidden" name="province" :value="province">
+    @else
+        <select name="province" x-model="province" @change="district = ''; neighborhood = ''" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy">
+            <option value="">Tüm İller</option>
+            <template x-for="option in provinces" :key="option">
+                <option :value="option" x-text="option" :selected="option === province"></option>
+            </template>
+        </select>
+    @endif
 
     <select name="district" x-model="district" @change="neighborhood = ''" :disabled="!province" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400">
         <option value="" x-text="province ? 'Tüm İlçeler' : 'Önce il seçin'"></option>
