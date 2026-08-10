@@ -27,30 +27,30 @@
                 :class="open ? 'grid' : 'hidden'"
                 class="mt-3 grid-cols-2 gap-3 rounded-lg border border-gray-200 bg-white p-4 sm:mt-0 sm:!grid sm:grid-cols-3 sm:gap-3 lg:grid-cols-6"
             >
-                <select name="listing_type" class="col-span-2 rounded-md border-gray-300 text-sm sm:col-span-1">
+                <select name="listing_type" class="col-span-2 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy sm:col-span-1">
                     <option value="">Satılık / Kiralık</option>
                     <option value="sale" @selected(request('listing_type') === 'sale')>Satılık</option>
                     <option value="rent" @selected(request('listing_type') === 'rent')>Kiralık</option>
                 </select>
 
-                <select name="category_id" class="rounded-md border-gray-300 text-sm">
+                <select name="category_id" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy">
                     <option value="">Tüm Kategoriler</option>
                     @foreach ($categories as $category)
                         <option value="{{ $category->id }}" @selected((string) request('category_id') === (string) $category->id)>{{ $category->name }}</option>
                     @endforeach
                 </select>
 
-                <select name="location_id" class="rounded-md border-gray-300 text-sm">
+                <select name="location_id" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy">
                     <option value="">Tüm Konumlar</option>
                     @foreach ($locations as $location)
                         <option value="{{ $location->id }}" @selected((string) request('location_id') === (string) $location->id)>{{ $location->district }}@if ($location->neighborhood) / {{ $location->neighborhood }}@endif</option>
                     @endforeach
                 </select>
 
-                <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="Min. Fiyat" class="rounded-md border-gray-300 text-sm">
-                <input type="number" name="max_price" value="{{ request('max_price') }}" placeholder="Max. Fiyat" class="rounded-md border-gray-300 text-sm">
+                <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="Min. Fiyat" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy">
+                <input type="number" name="max_price" value="{{ request('max_price') }}" placeholder="Max. Fiyat" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy">
 
-                <select name="sort" class="rounded-md border-gray-300 text-sm">
+                <select name="sort" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy">
                     <option value="">En Yeni</option>
                     <option value="price_asc" @selected(request('sort') === 'price_asc')>Fiyat: Düşükten Yükseğe</option>
                     <option value="price_desc" @selected(request('sort') === 'price_desc')>Fiyat: Yüksekten Düşüğe</option>
