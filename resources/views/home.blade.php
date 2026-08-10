@@ -41,7 +41,7 @@
                     href="{{ route('properties.index', ['category_id' => $category->id]) }}"
                     class="flex shrink-0 flex-col items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-center text-sm font-medium text-gray-700 transition hover:border-brand-navy hover:text-brand-navy sm:shrink"
                 >
-                    <x-heroicon-o-building-office-2 class="h-6 w-6" />
+                    <x-dynamic-component :component="$category->icon" class="h-6 w-6" />
                     {{ $category->name }}
                 </a>
             @endforeach

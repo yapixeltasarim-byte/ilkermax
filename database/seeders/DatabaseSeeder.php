@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Agent;
 use App\Models\Category;
 use App\Models\Feature;
-use App\Models\Location;
 use App\Models\Property;
 use App\Models\PropertyImage;
 use App\Models\User;
@@ -24,7 +23,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Category::factory(7)->create();
-        Location::factory(10)->create();
+        $this->call(LocationSeeder::class);
         Agent::factory(5)->create();
         $features = Feature::factory(10)->create();
 
