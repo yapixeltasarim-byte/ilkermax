@@ -1,27 +1,16 @@
 import { InlineKeyboard, type Context } from 'grammy';
 import { env } from '../env.js';
-import { ApiError, createProperty, uploadImage } from '../api.js';
+import { ApiError, createProperty, getCategories, getLocations, uploadImage } from '../api.js';
+import { askButtonChoice, askPaginatedChoice } from '../buttonPrompt.js';
 import type { BotConversation } from '../types.js';
+
+const PROVINCE = 'Kocaeli';
 
 function parsePrice(text: string): number | null {
     const digitsOnly = text.replace(/[^\d]/g, '');
     const price = Number(digitsOnly);
 
     return digitsOnly && price > 0 ? price : null;
-}
-
-function parseLocation(text: string): { province: string; district: string; neighborhood: string } | null {
-    const parts = text
-        .split(',')
-        .map((part) => part.trim())
-        .filter(Boolean);
-
-    if (parts.length < 3) {
-        return null;
-    }
-
-    const [province, district, neighborhood] = parts;
-    return { province, district, neighborhood };
 }
 
 function parsePositiveInt(text: string): number | null {
@@ -32,6 +21,13 @@ function parsePositiveInt(text: string): number | null {
 
 export async function createListing(conversation: BotConversation, ctx: Context): Promise<void> {
     await ctx.reply('Yeni ilan giriyoruz. İstediğiniz zaman /iptal yazarak vazgeçebilirsiniz.');
+
+    await ctx.reply('İlan başlığı? (ör. Deniz manzaralı, eşyalı 3+1 daire)');
+    const titleMsg = await conversation.waitFor('message:text');
+    const title = titleMsg.message.text.trim();
+
+    const categories = await conversation.external(() => getCategories());
+    const category = await askButtonChoice(conversation, ctx, 'Kategori?', categories, 'cat:');
 
     const listingTypeKeyboard = new InlineKeyboard()
         .text('🏠 Satılık', 'listing_type:sale')
@@ -55,16 +51,12 @@ export async function createListing(conversation: BotConversation, ctx: Context)
         }
     }
 
-    let location: { province: string; district: string; neighborhood: string } | null = null;
-    while (!location) {
-        await ctx.reply('Konum? (il, ilçe, mahalle — virgülle ayırın, ör: Kocaeli, İzmit, Yenişehir)');
-        const { message } = await conversation.waitFor('message:text');
-        location = parseLocation(message.text);
+    const locations = await conversation.external(() => getLocations());
+    const districts = Object.keys(locations).sort((a, b) => a.localeCompare(b, 'tr'));
 
-        if (!location) {
-            await ctx.reply('Lütfen il, ilçe ve mahalleyi virgülle ayırarak yazın (ör: Kocaeli, İzmit, Yenişehir).');
-        }
-    }
+    const district = await askButtonChoice(conversation, ctx, `İlçe? (${PROVINCE})`, districts, 'dst:', 3);
+    const neighborhoods = locations[district] ?? [];
+    const neighborhood = await askPaginatedChoice(conversation, ctx, `${district} — Mahalle?`, neighborhoods, 'nbh:');
 
     await ctx.reply('Oda sayısı? (ör. 3+1)');
     const roomsMsg = await conversation.waitFor('message:text');
@@ -91,11 +83,13 @@ export async function createListing(conversation: BotConversation, ctx: Context)
     try {
         created = await conversation.external(() =>
             createProperty({
+                title,
+                category,
                 listing_type: listingType,
                 price: price!,
-                province: location!.province,
-                district: location!.district,
-                neighborhood: location!.neighborhood,
+                province: PROVINCE,
+                district,
+                neighborhood,
                 rooms,
                 area_net: areaNet!,
                 description,

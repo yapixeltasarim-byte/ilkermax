@@ -5,7 +5,9 @@ export type BotContext = ConversationFlavor<Context>;
 export type BotConversation = Conversation<BotContext, Context>;
 
 export interface CreatePropertyPayload {
+    title: string;
     listing_type: 'sale' | 'rent';
+    category: string;
     price: number;
     province: string;
     district: string;
@@ -14,6 +16,8 @@ export interface CreatePropertyPayload {
     area_net: number;
     description: string;
 }
+
+export type LocationsResponse = Record<string, string[]>;
 
 export interface CreatePropertyResponse {
     id: number;

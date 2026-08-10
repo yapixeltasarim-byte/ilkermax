@@ -1,5 +1,5 @@
 import { env } from './env.js';
-import type { CreatePropertyPayload, CreatePropertyResponse, UploadImageResponse } from './types.js';
+import type { CreatePropertyPayload, CreatePropertyResponse, LocationsResponse, UploadImageResponse } from './types.js';
 
 class ApiError extends Error {
     constructor(
@@ -17,6 +17,26 @@ async function parseErrorBody(response: Response): Promise<unknown> {
     } catch {
         return null;
     }
+}
+
+async function apiGet<T>(path: string): Promise<T> {
+    const response = await fetch(`${env.apiBaseUrl}${path}`, {
+        headers: { 'X-API-Key': env.apiKey },
+    });
+
+    if (!response.ok) {
+        throw new ApiError(`${path} alınamadı`, response.status, await parseErrorBody(response));
+    }
+
+    return (await response.json()) as T;
+}
+
+export function getCategories(): Promise<string[]> {
+    return apiGet<string[]>('/api/categories');
+}
+
+export function getLocations(): Promise<LocationsResponse> {
+    return apiGet<LocationsResponse>('/api/locations');
 }
 
 export async function createProperty(payload: CreatePropertyPayload): Promise<CreatePropertyResponse> {
