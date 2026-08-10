@@ -37,7 +37,15 @@ class Property extends Model
     {
         static::saving(function (Property $property) {
             if (! $property->slug) {
-                $property->slug = Str::slug($property->title).'-'.Str::random(6);
+                $location = $property->location;
+
+                $slugSource = collect([
+                    $property->title,
+                    $location?->district,
+                    $location?->neighborhood,
+                ])->filter()->implode(' ');
+
+                $property->slug = Str::slug($slugSource, '-', 'tr').'-'.Str::lower(Str::random(5));
             }
         });
     }

@@ -49,29 +49,39 @@
     </section>
 
     @if ($featured->isNotEmpty())
-        <section class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-900 sm:text-xl">Öne Çıkan İlanlar</h2>
-                <a href="{{ route('properties.index') }}" class="text-sm font-medium text-brand-navy hover:underline">Tümünü Gör</a>
-            </div>
+        <section class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+            <a href="{{ route('properties.index') }}" class="flex items-center justify-between">
+                <h2 class="flex items-center gap-2 text-base font-semibold text-gray-900 sm:text-lg">
+                    <x-heroicon-o-fire class="h-5 w-5 text-brand-red" />
+                    Öne Çıkan İlanlar
+                </h2>
+                <x-heroicon-o-chevron-right class="h-5 w-5 text-gray-400" />
+            </a>
 
-            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="mt-3 flex gap-4 overflow-x-auto pb-2">
                 @foreach ($featured as $property)
-                    <x-property-card :property="$property" />
+                    <div class="w-36 shrink-0 sm:w-48">
+                        <x-property-card :property="$property" />
+                    </div>
                 @endforeach
             </div>
         </section>
     @endif
 
-    <section class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900 sm:text-xl">Yeni Eklenen İlanlar</h2>
-            <a href="{{ route('properties.index') }}" class="text-sm font-medium text-brand-navy hover:underline">Tümünü Gör</a>
-        </div>
+    <section class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+        <a href="{{ route('properties.index') }}" class="flex items-center justify-between">
+            <h2 class="flex items-center gap-2 text-base font-semibold text-gray-900 sm:text-lg">
+                <x-heroicon-o-sparkles class="h-5 w-5 text-brand-navy" />
+                Yeni Eklenen İlanlar
+            </h2>
+            <x-heroicon-o-chevron-right class="h-5 w-5 text-gray-400" />
+        </a>
 
-        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="mt-3 flex gap-4 overflow-x-auto pb-2">
             @foreach ($latest as $property)
-                <x-property-card :property="$property" />
+                <div class="w-36 shrink-0 sm:w-48">
+                    <x-property-card :property="$property" />
+                </div>
             @endforeach
         </div>
     </section>
