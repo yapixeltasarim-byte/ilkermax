@@ -1,16 +1,7 @@
-import type { Context } from 'grammy';
+import { InlineKeyboard, type Context } from 'grammy';
 import { env } from '../env.js';
 import { ApiError, createProperty, uploadImage } from '../api.js';
 import type { BotConversation } from '../types.js';
-
-function parseListingType(text: string): 'sale' | 'rent' | null {
-    const value = text.toLowerCase().trim();
-
-    if (value.startsWith('sat')) return 'sale';
-    if (value.startsWith('kira')) return 'rent';
-
-    return null;
-}
 
 function parsePrice(text: string): number | null {
     const digitsOnly = text.replace(/[^\d]/g, '');
@@ -42,22 +33,16 @@ function parsePositiveInt(text: string): number | null {
 export async function createListing(conversation: BotConversation, ctx: Context): Promise<void> {
     await ctx.reply('Yeni ilan giriyoruz. İstediğiniz zaman /iptal yazarak vazgeçebilirsiniz.');
 
-    let listingType: 'sale' | 'rent' | null = null;
-    while (!listingType) {
-        await ctx.reply('İlan tipi? (satılık/kiralık)');
-        const { message } = await conversation.waitFor('message:text');
+    const listingTypeKeyboard = new InlineKeyboard()
+        .text('🏠 Satılık', 'listing_type:sale')
+        .text('🔑 Kiralık', 'listing_type:rent');
 
-        if (message.text === '/iptal') {
-            await ctx.reply('İlan girişi iptal edildi.');
-            return;
-        }
+    await ctx.reply('İlan tipi?', { reply_markup: listingTypeKeyboard });
+    const listingTypeCtx = await conversation.waitForCallbackQuery(['listing_type:sale', 'listing_type:rent']);
+    const listingType: 'sale' | 'rent' = listingTypeCtx.callbackQuery.data === 'listing_type:sale' ? 'sale' : 'rent';
 
-        listingType = parseListingType(message.text);
-
-        if (!listingType) {
-            await ctx.reply('Anlayamadım. Lütfen "satılık" veya "kiralık" yazın.');
-        }
-    }
+    await listingTypeCtx.answerCallbackQuery();
+    await listingTypeCtx.editMessageText(`İlan tipi: ${listingType === 'sale' ? '🏠 Satılık' : '🔑 Kiralık'}`);
 
     let price: number | null = null;
     while (!price) {
@@ -106,7 +91,7 @@ export async function createListing(conversation: BotConversation, ctx: Context)
     try {
         created = await conversation.external(() =>
             createProperty({
-                listing_type: listingType!,
+                listing_type: listingType,
                 price: price!,
                 province: location!.province,
                 district: location!.district,
