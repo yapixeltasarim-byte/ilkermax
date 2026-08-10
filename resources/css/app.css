@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+@plugin '@tailwindcss/typography';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -6,4 +8,15 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-brand-navy: #1c3144;
+    --color-brand-red: #d60033;
+}
+
+#property-map {
+    z-index: 0;
+}
+
+[x-cloak] {
+    display: none !important;
 }

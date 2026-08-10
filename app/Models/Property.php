@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -63,5 +65,21 @@ class Property extends Model
     public function features(): BelongsToMany
     {
         return $this->belongsToMany(Feature::class, 'property_feature');
+    }
+
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', 'published');
+    }
+
+    protected function coverImage(): Attribute
+    {
+        return Attribute::get(function () {
+            if ($this->relationLoaded('images')) {
+                return $this->images->firstWhere('is_cover', true) ?? $this->images->first();
+            }
+
+            return $this->images()->orderByDesc('is_cover')->orderBy('sort_order')->first();
+        });
     }
 }
