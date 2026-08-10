@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>@yield('title', config('app.name'))</title>
-        <meta name="description" content="@yield('meta_description', 'İstanbul\'da satılık ve kiralık daire, villa, arsa ve işyeri ilanları.')">
+        <meta name="description" content="@yield('meta_description', 'Kocaeli\'de satılık ve kiralık daire, villa, arsa ve işyeri ilanları.')">
 
         @stack('meta')
 
@@ -67,7 +67,7 @@
                         <p class="text-lg font-bold text-white">
                             İlker<span class="text-brand-red">Max</span>
                         </p>
-                        <p class="mt-2 text-sm text-gray-300">İstanbul'da satılık ve kiralık emlak ilanları.</p>
+                        <p class="mt-2 text-sm text-gray-300">Kocaeli'de satılık ve kiralık emlak ilanları.</p>
                     </div>
 
                     <div>

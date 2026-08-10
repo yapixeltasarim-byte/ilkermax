@@ -13,19 +13,20 @@ class LocationFactory extends Factory
     public function definition(): array
     {
         $districts = [
-            'Kadıköy' => ['Moda', 'Caferağa', 'Fenerbahçe'],
-            'Beşiktaş' => ['Levent', 'Etiler', 'Bebek'],
-            'Üsküdar' => ['Acıbadem', 'Altunizade', 'Kuzguncuk'],
-            'Şişli' => ['Nişantaşı', 'Mecidiyeköy', 'Teşvikiye'],
-            'Ataşehir' => ['Barbaros', 'İçerenköy', 'Küçükbakkalköy'],
-            'Bakırköy' => ['Yeşilköy', 'Ataköy', 'Florya'],
-            'Maltepe' => ['Bağlarbaşı', 'Küçükyalı', 'Cevizli'],
+            'İzmit' => ['Yenişehir', 'Cedit', 'Alikahya', 'Karabaş', 'Ömerağa'],
+            'Gebze' => ['Osman Yılmaz', 'Mustafapaşa', 'Muallimköy', 'Cumhuriyet'],
+            'Darıca' => ['Bağlarbaşı', 'Emek', 'Fevzi Çakmak'],
+            'Gölcük' => ['Değirmendere', 'Merkez', 'Yazlık'],
+            'Çayırova' => ['Şekerpınar', 'Akse', 'Atatürk'],
+            'Derince' => ['Yeni Mahalle', 'Çenedağ'],
+            'Kartepe' => ['Uzunçiftlik', 'Yeniköy'],
+            'Körfez' => ['Yeniköy', 'Hereke'],
         ];
 
         $district = $this->faker->randomElement(array_keys($districts));
 
         return [
-            'province' => 'İstanbul',
+            'province' => 'Kocaeli',
             'district' => $district,
             'neighborhood' => $this->faker->randomElement($districts[$district]),
         ];

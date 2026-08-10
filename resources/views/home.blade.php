@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'İlkerMax — İstanbul\'da Satılık ve Kiralık Emlak İlanları')
-@section('meta_description', 'İstanbul\'da satılık ve kiralık daire, villa, arsa ve işyeri ilanlarını İlkerMax\'ta keşfedin.')
+@section('title', 'İlkerMax — Kocaeli\'de Satılık ve Kiralık Emlak İlanları')
+@section('meta_description', 'Kocaeli\'de satılık ve kiralık daire, villa, arsa ve işyeri ilanlarını İlkerMax\'ta keşfedin.')
 
 @section('content')
     <section class="bg-brand-navy px-4 py-12 text-white sm:px-6 sm:py-16">
         <div class="mx-auto max-w-6xl">
             <h1 class="text-2xl font-bold sm:text-4xl">Hayalinizdeki eve İlkerMax ile ulaşın</h1>
-            <p class="mt-2 text-sm text-gray-300 sm:text-base">İstanbul'da binlerce satılık ve kiralık ilan arasından size uygun olanı bulun.</p>
+            <p class="mt-2 text-sm text-gray-300 sm:text-base">Kocaeli'de binlerce satılık ve kiralık ilan arasından size uygun olanı bulun.</p>
 
             <form action="{{ route('properties.index') }}" method="GET" class="mt-6 grid grid-cols-1 gap-3 rounded-xl bg-white p-4 text-gray-900 shadow-lg sm:grid-cols-2 lg:grid-cols-6">
                 <select name="listing_type" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy">

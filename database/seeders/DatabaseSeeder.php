@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Category::factory(7)->create();
-        Location::factory(7)->create();
+        Location::factory(10)->create();
         Agent::factory(5)->create();
         $features = Feature::factory(10)->create();
 
