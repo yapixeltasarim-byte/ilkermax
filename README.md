@@ -64,3 +64,5 @@ image=<dosya>
 ## Yerel geliştirme
 
 Bu makinede [Laravel Herd](https://herd.laravel.com) kullanılıyor. Herd'in `php.ini` dosyasındaki `extension_dir`, Windows kullanıcı adındaki Türkçe `İ` karakteri yüzünden yanlış çözümleniyor — bu nedenle komutlar düzeltilmiş bir `php.ini` kopyasıyla (`PHPRC` ortam değişkeni veya `-c` bayrağı ile) çalıştırılmalı.
+
+`APP_URL`'in `.env`'de gerçekte sitenin çalıştığı adresle birebir aynı olması gerekiyor (ör. `php -S 127.0.0.1:8000` ile çalıştırılıyorsa `APP_URL=http://127.0.0.1:8000`) — aksi halde `Storage::url()` ile üretilen fotoğraf linkleri (ilan görselleri) yanlış host'a işaret eder ve yüklenmez.
