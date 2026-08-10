@@ -21,8 +21,13 @@ class PropertyController extends Controller
             $query->where('category_id', $request->integer('category_id'));
         }
 
-        if ($request->filled('location_id')) {
-            $query->where('location_id', $request->integer('location_id'));
+        if ($request->filled('province') || $request->filled('district') || $request->filled('neighborhood')) {
+            $query->whereHas('location', function ($locationQuery) use ($request) {
+                $locationQuery
+                    ->when($request->filled('province'), fn ($q) => $q->where('province', $request->string('province')))
+                    ->when($request->filled('district'), fn ($q) => $q->where('district', $request->string('district')))
+                    ->when($request->filled('neighborhood'), fn ($q) => $q->where('neighborhood', $request->string('neighborhood')));
+            });
         }
 
         if ($request->filled('min_price')) {

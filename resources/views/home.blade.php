@@ -9,7 +9,7 @@
             <h1 class="text-2xl font-bold sm:text-4xl">Hayalinizdeki eve İlkerMax ile ulaşın</h1>
             <p class="mt-2 text-sm text-gray-300 sm:text-base">İstanbul'da binlerce satılık ve kiralık ilan arasından size uygun olanı bulun.</p>
 
-            <form action="{{ route('properties.index') }}" method="GET" class="mt-6 grid grid-cols-1 gap-3 rounded-xl bg-white p-4 text-gray-900 shadow-lg sm:grid-cols-2 lg:grid-cols-4">
+            <form action="{{ route('properties.index') }}" method="GET" class="mt-6 grid grid-cols-1 gap-3 rounded-xl bg-white p-4 text-gray-900 shadow-lg sm:grid-cols-2 lg:grid-cols-6">
                 <select name="listing_type" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy">
                     <option value="">Satılık / Kiralık</option>
                     <option value="sale">Satılık</option>
@@ -23,14 +23,9 @@
                     @endforeach
                 </select>
 
-                <select name="location_id" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy">
-                    <option value="">Tüm Konumlar</option>
-                    @foreach ($locations as $location)
-                        <option value="{{ $location->id }}">{{ $location->district }}@if ($location->neighborhood) / {{ $location->neighborhood }}@endif</option>
-                    @endforeach
-                </select>
+                <x-location-cascade :locations="$locations" />
 
-                <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-md bg-brand-red px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90">
+                <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-md bg-brand-red px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 sm:col-span-2 lg:col-span-1">
                     <x-heroicon-o-magnifying-glass class="h-4 w-4" />
                     İlan Ara
                 </button>

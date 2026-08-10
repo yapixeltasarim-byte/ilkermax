@@ -40,12 +40,7 @@
                     @endforeach
                 </select>
 
-                <select name="location_id" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy">
-                    <option value="">Tüm Konumlar</option>
-                    @foreach ($locations as $location)
-                        <option value="{{ $location->id }}" @selected((string) request('location_id') === (string) $location->id)>{{ $location->district }}@if ($location->neighborhood) / {{ $location->neighborhood }}@endif</option>
-                    @endforeach
-                </select>
+                <x-location-cascade :locations="$locations" />
 
                 <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="Min. Fiyat" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy">
                 <input type="number" name="max_price" value="{{ request('max_price') }}" placeholder="Max. Fiyat" class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-brand-navy focus:outline-none focus:ring-1 focus:ring-brand-navy">
