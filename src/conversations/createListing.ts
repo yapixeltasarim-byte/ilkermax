@@ -108,9 +108,13 @@ export async function createListing(conversation: BotConversation, ctx: Context)
         return;
     }
 
-    await ctx.reply('İlan oluşturuldu. Şimdi fotoğrafları gönderin, bitince /bitir yazın.');
+    await ctx.reply('İlan oluşturuldu. Şimdi fotoğrafları gönderin (istediğiniz kadar, art arda), bitince /bitir yazın.');
 
-    let photoCount = 0;
+    // Önce sadece fotoğrafların file_id'lerini topluyoruz (hızlı, ağ isteği yok).
+    // İndirme/yükleme gibi yavaş işleri bekleme döngüsünün İÇİNE koymak, art arda gelen
+    // fotoğrafların conversations eklentisinin "replay" mekanizmasıyla çakışmasına
+    // (ve sonraki fotoğrafların kaybolmasına) yol açıyordu — bu yüzden ayrıştırdık.
+    const fileIds: string[] = [];
 
     while (true) {
         const photoCtx = await conversation.waitFor(['message:photo', 'message:document', 'message:text']);
@@ -128,24 +132,41 @@ export async function createListing(conversation: BotConversation, ctx: Context)
             continue;
         }
 
-        try {
-            await conversation.external(async () => {
-                const file = await ctx.api.getFile(fileId);
-                const fileUrl = `https://api.telegram.org/file/bot${env.botToken}/${file.file_path}`;
-                const response = await fetch(fileUrl);
-                const buffer = Buffer.from(await response.arrayBuffer());
+        fileIds.push(fileId);
+        await ctx.reply(`📷 Fotoğraf alındı (${fileIds.length}). Devam edebilir veya /bitir yazabilirsiniz.`);
+    }
 
-                await uploadImage(created.upload_url, buffer, `photo-${Date.now()}.jpg`);
-            });
+    let uploadedCount = 0;
 
-            photoCount += 1;
-            await ctx.reply(`Fotoğraf ${photoCount} yüklendi.`);
-        } catch (error) {
-            console.error('Fotoğraf yükleme hatası:', error);
-            await ctx.reply('Bu fotoğraf yüklenemedi, devam edebilirsiniz veya /bitir yazın.');
-        }
+    if (fileIds.length > 0) {
+        await ctx.reply(`${fileIds.length} fotoğraf yükleniyor...`);
+
+        const results = await conversation.external(async () => {
+            const outcomes: boolean[] = [];
+
+            for (const fileId of fileIds) {
+                try {
+                    const file = await ctx.api.getFile(fileId);
+                    const fileUrl = `https://api.telegram.org/file/bot${env.botToken}/${file.file_path}`;
+                    const response = await fetch(fileUrl);
+                    const buffer = Buffer.from(await response.arrayBuffer());
+
+                    await uploadImage(created.upload_url, buffer, `photo-${Date.now()}-${outcomes.length}.jpg`);
+                    outcomes.push(true);
+                } catch (error) {
+                    console.error('Fotoğraf yükleme hatası:', error);
+                    outcomes.push(false);
+                }
+            }
+
+            return outcomes;
+        });
+
+        uploadedCount = results.filter(Boolean).length;
     }
 
     const listingUrl = `${env.siteUrl}/ilan/${created.slug}`;
-    await ctx.reply(`İlan yayınlandı! ${photoCount} fotoğraf eklendi.\n${listingUrl}`);
+    const failedCount = fileIds.length - uploadedCount;
+    const failureNote = failedCount > 0 ? ` (${failedCount} fotoğraf yüklenemedi)` : '';
+    await ctx.reply(`İlan yayınlandı! ${uploadedCount} fotoğraf eklendi${failureNote}.\n${listingUrl}`);
 }

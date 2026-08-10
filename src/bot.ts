@@ -5,7 +5,21 @@ import { authMiddleware } from './auth.js';
 import { createListing } from './conversations/createListing.js';
 import type { BotContext } from './types.js';
 
+process.on('unhandledRejection', (reason) => {
+    console.error('[unhandledRejection]', reason);
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('[uncaughtException]', error);
+});
+
 const bot = new Bot<BotContext>(env.botToken);
+
+bot.use((ctx, next) => {
+    const kind = Object.keys(ctx.update).find((key) => key !== 'update_id');
+    console.log(`[update] chat=${ctx.chat?.id} from=${ctx.from?.id} type=${kind}`);
+    return next();
+});
 
 bot.use(conversations());
 bot.use(createConversation(createListing, 'createListing'));
@@ -42,4 +56,7 @@ async function main() {
     });
 }
 
-main();
+main().catch((error) => {
+    console.error('Bot başlatılamadı:', error);
+    process.exitCode = 1;
+});
