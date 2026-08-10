@@ -76,6 +76,7 @@ class PropertyController extends Controller
 
         return response()->json([
             'id' => $property->id,
+            'slug' => $property->slug,
             'upload_url' => route('api.properties.images.store', $property),
         ], 201);
     }
