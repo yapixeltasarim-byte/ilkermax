@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -29,5 +30,13 @@ class Location extends Model
     public function properties(): HasMany
     {
         return $this->hasMany(Property::class);
+    }
+
+    /**
+     * Sadece yayınlanmış en az bir ilanı olan konumlar (public site filtre dropdown'ları için).
+     */
+    public function scopeWithPublishedProperties(Builder $query): Builder
+    {
+        return $query->whereHas('properties', fn ($q) => $q->where('status', 'published'));
     }
 }

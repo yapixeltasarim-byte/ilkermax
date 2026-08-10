@@ -24,7 +24,7 @@ class HomeController extends Controller
             ->get();
 
         $categories = Category::whereNull('parent_id')->orderBy('name')->get();
-        $locations = Location::orderBy('district')->get();
+        $locations = Location::withPublishedProperties()->orderBy('district')->get();
 
         return view('home', compact('featured', 'latest', 'categories', 'locations'));
     }

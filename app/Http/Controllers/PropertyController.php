@@ -51,7 +51,7 @@ class PropertyController extends Controller
         $properties = $query->paginate(12)->withQueryString();
 
         $categories = Category::whereNull('parent_id')->orderBy('name')->get();
-        $locations = Location::orderBy('district')->get();
+        $locations = Location::withPublishedProperties()->orderBy('district')->get();
 
         return view('properties.index', compact('properties', 'categories', 'locations'));
     }
