@@ -1,0 +1,166 @@
+import type { Context } from 'grammy';
+import { env } from '../env.js';
+import { ApiError, createProperty, uploadImage } from '../api.js';
+import type { BotConversation } from '../types.js';
+
+function parseListingType(text: string): 'sale' | 'rent' | null {
+    const value = text.toLowerCase().trim();
+
+    if (value.startsWith('sat')) return 'sale';
+    if (value.startsWith('kira')) return 'rent';
+
+    return null;
+}
+
+function parsePrice(text: string): number | null {
+    const digitsOnly = text.replace(/[^\d]/g, '');
+    const price = Number(digitsOnly);
+
+    return digitsOnly && price > 0 ? price : null;
+}
+
+function parseLocation(text: string): { province: string; district: string; neighborhood: string } | null {
+    const parts = text
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+    if (parts.length < 3) {
+        return null;
+    }
+
+    const [province, district, neighborhood] = parts;
+    return { province, district, neighborhood };
+}
+
+function parsePositiveInt(text: string): number | null {
+    const value = Number(text.trim());
+
+    return Number.isInteger(value) && value > 0 ? value : null;
+}
+
+export async function createListing(conversation: BotConversation, ctx: Context): Promise<void> {
+    await ctx.reply('Yeni ilan giriyoruz. İstediğiniz zaman /iptal yazarak vazgeçebilirsiniz.');
+
+    let listingType: 'sale' | 'rent' | null = null;
+    while (!listingType) {
+        await ctx.reply('İlan tipi? (satılık/kiralık)');
+        const { message } = await conversation.waitFor('message:text');
+
+        if (message.text === '/iptal') {
+            await ctx.reply('İlan girişi iptal edildi.');
+            return;
+        }
+
+        listingType = parseListingType(message.text);
+
+        if (!listingType) {
+            await ctx.reply('Anlayamadım. Lütfen "satılık" veya "kiralık" yazın.');
+        }
+    }
+
+    let price: number | null = null;
+    while (!price) {
+        await ctx.reply('Fiyat? (sadece sayı, ör. 4500000)');
+        const { message } = await conversation.waitFor('message:text');
+        price = parsePrice(message.text);
+
+        if (!price) {
+            await ctx.reply('Geçerli bir fiyat girin (sadece rakam).');
+        }
+    }
+
+    let location: { province: string; district: string; neighborhood: string } | null = null;
+    while (!location) {
+        await ctx.reply('Konum? (il, ilçe, mahalle — virgülle ayırın, ör: Kocaeli, İzmit, Yenişehir)');
+        const { message } = await conversation.waitFor('message:text');
+        location = parseLocation(message.text);
+
+        if (!location) {
+            await ctx.reply('Lütfen il, ilçe ve mahalleyi virgülle ayırarak yazın (ör: Kocaeli, İzmit, Yenişehir).');
+        }
+    }
+
+    await ctx.reply('Oda sayısı? (ör. 3+1)');
+    const roomsMsg = await conversation.waitFor('message:text');
+    const rooms = roomsMsg.message.text.trim();
+
+    let areaNet: number | null = null;
+    while (!areaNet) {
+        await ctx.reply('Net m²?');
+        const { message } = await conversation.waitFor('message:text');
+        areaNet = parsePositiveInt(message.text);
+
+        if (!areaNet) {
+            await ctx.reply('Geçerli bir m² değeri girin (ör. 120).');
+        }
+    }
+
+    await ctx.reply('Açıklama?');
+    const descriptionMsg = await conversation.waitFor('message:text');
+    const description = descriptionMsg.message.text.trim();
+
+    await ctx.reply('İlan oluşturuluyor...');
+
+    let created;
+    try {
+        created = await conversation.external(() =>
+            createProperty({
+                listing_type: listingType!,
+                price: price!,
+                province: location!.province,
+                district: location!.district,
+                neighborhood: location!.neighborhood,
+                rooms,
+                area_net: areaNet!,
+                description,
+            }),
+        );
+    } catch (error) {
+        console.error('createProperty hatası:', error);
+        const detail = error instanceof ApiError ? ` (${error.status})` : '';
+        await ctx.reply(`İlan oluşturulamadı${detail}. Lütfen daha sonra tekrar deneyin.`);
+        return;
+    }
+
+    await ctx.reply('İlan oluşturuldu. Şimdi fotoğrafları gönderin, bitince /bitir yazın.');
+
+    let photoCount = 0;
+
+    while (true) {
+        const photoCtx = await conversation.waitFor(['message:photo', 'message:document', 'message:text']);
+
+        if (photoCtx.message.text === '/bitir') {
+            break;
+        }
+
+        const fileId =
+            photoCtx.message.photo?.at(-1)?.file_id ??
+            (photoCtx.message.document?.mime_type?.startsWith('image/') ? photoCtx.message.document.file_id : undefined);
+
+        if (!fileId) {
+            await ctx.reply('Bu bir fotoğraf değil. Fotoğraf gönderin veya bitirmek için /bitir yazın.');
+            continue;
+        }
+
+        try {
+            await conversation.external(async () => {
+                const file = await ctx.api.getFile(fileId);
+                const fileUrl = `https://api.telegram.org/file/bot${env.botToken}/${file.file_path}`;
+                const response = await fetch(fileUrl);
+                const buffer = Buffer.from(await response.arrayBuffer());
+
+                await uploadImage(created.upload_url, buffer, `photo-${Date.now()}.jpg`);
+            });
+
+            photoCount += 1;
+            await ctx.reply(`Fotoğraf ${photoCount} yüklendi.`);
+        } catch (error) {
+            console.error('Fotoğraf yükleme hatası:', error);
+            await ctx.reply('Bu fotoğraf yüklenemedi, devam edebilirsiniz veya /bitir yazın.');
+        }
+    }
+
+    const listingUrl = `${env.siteUrl}/ilan/${created.slug}`;
+    await ctx.reply(`İlan yayınlandı! ${photoCount} fotoğraf eklendi.\n${listingUrl}`);
+}
