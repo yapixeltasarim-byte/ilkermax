@@ -39,4 +39,6 @@ return [
         'api_key' => env('BOT_API_KEY'),
     ],
 
+    'deploy_secret' => env('DEPLOY_SECRET'),
+
 ];
