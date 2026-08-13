@@ -12,7 +12,6 @@ set -e
 echo "=== İlkerMax kurulum (public_html = sabit kök) ==="
 echo
 
-read -rp "GitHub token (Contents: Read-only, ilkermax reposu için): " GH_TOKEN
 read -rp "Domain (ör. https://ornek.com, sonunda / OLMADAN): " SITE_URL
 read -rp "MySQL veritabanı adı: " DB_NAME
 read -rp "MySQL kullanıcı adı: " DB_USER
@@ -25,9 +24,8 @@ WEB_ROOT="$HOME/public_html"
 echo
 echo "→ Depo klonlanıyor..."
 rm -rf "$APP_DIR"
-git clone "https://${GH_TOKEN}@github.com/yapixeltasarim-byte/ilkermax.git" "$APP_DIR"
+git clone "https://github.com/yapixeltasarim-byte/ilkermax.git" "$APP_DIR"
 cd "$APP_DIR"
-git remote set-url origin "https://github.com/yapixeltasarim-byte/ilkermax.git"
 
 echo "→ Bağımlılıklar kuruluyor (composer install)..."
 composer install --no-dev --optimize-autoloader --no-interaction
