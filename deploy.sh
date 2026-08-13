@@ -30,12 +30,61 @@ cd "$APP_DIR"
 echo "→ Bağımlılıklar kuruluyor (composer install)..."
 composer install --no-dev --optimize-autoloader --no-interaction
 
-echo "→ .env hazırlanıyor..."
-cp .env.production .env
-sed -i "s#^APP_URL=.*#APP_URL=${SITE_URL}#" .env
-sed -i "s#^DB_DATABASE=.*#DB_DATABASE=${DB_NAME}#" .env
-sed -i "s#^DB_USERNAME=.*#DB_USERNAME=${DB_USER}#" .env
-sed -i "s#^DB_PASSWORD=.*#DB_PASSWORD=${DB_PASS}#" .env
+echo "→ .env oluşturuluyor..."
+APP_KEY_VALUE="base64:$(openssl rand -base64 32)"
+ADMIN_PASSWORD_VALUE=$(openssl rand -hex 8)
+BOT_KEY_VALUE=$(openssl rand -hex 20)
+
+cat > .env <<ENVEOF
+APP_NAME=İlkerMax
+APP_ENV=production
+APP_KEY=${APP_KEY_VALUE}
+APP_DEBUG=false
+APP_URL=${SITE_URL}
+
+APP_LOCALE=tr
+APP_FALLBACK_LOCALE=tr
+APP_FAKER_LOCALE=tr_TR
+
+APP_MAINTENANCE_DRIVER=file
+
+BCRYPT_ROUNDS=12
+
+LOG_CHANNEL=stack
+LOG_STACK=single
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=error
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=${DB_NAME}
+DB_USERNAME=${DB_USER}
+DB_PASSWORD=${DB_PASS}
+
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+SESSION_PATH=/
+SESSION_DOMAIN=null
+
+BROADCAST_CONNECTION=log
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=database
+
+CACHE_STORE=database
+
+MAIL_MAILER=log
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="\${APP_NAME}"
+
+VITE_APP_NAME="\${APP_NAME}"
+
+BOT_API_KEY=${BOT_KEY_VALUE}
+
+FILAMENT_ADMIN_EMAIL=yapixeltasarim@gmail.com
+FILAMENT_ADMIN_PASSWORD=${ADMIN_PASSWORD_VALUE}
+ENVEOF
 
 echo "→ Veritabanı kuruluyor ve demo verilerle dolduruluyor..."
 php artisan migrate --force
