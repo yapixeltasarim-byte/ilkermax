@@ -1,93 +1,44 @@
-# İlkerMax — Hosting'e Kurulum (tek seferlik)
+# İlkerMax — Hosting'e Tek Komutla Kurulum
 
-SSH erişiminiz olduğu için ana yöntem GitHub'dan `git clone` + `composer install`. (SSH'sız bir hosting'e geçerseniz alt kısımdaki "SSH yoksa" bölümünü kullanın — zip paketiyle çalışır.)
+## 1. Hazırlık (2 dakika)
 
-## 1. Hazırlık — hosting panelinde
+1. **GitHub token**: [github.com/settings/tokens?type=beta](https://github.com/settings/tokens?type=beta) → **Generate new token** → isim verin, **Repository access**'te sadece **ilkermax** reposunu seçin, **Permissions** → **Contents: Read-only**. Oluşan token'ı kopyalayın (bir kere gösterilir).
+2. Hosting panelinizde (cPanel vb.) **yeni bir MySQL veritabanı + kullanıcı** oluşturun, adını/kullanıcı adını/şifresini not edin.
 
-1. cPanel (veya kullandığınız panel) üzerinden **yeni bir MySQL veritabanı** ve bir **veritabanı kullanıcısı** oluşturun, kullanıcıyı veritabanına tam yetkiyle bağlayın. Şu bilgileri not edin: veritabanı adı, kullanıcı adı, şifre.
-2. Domain'inizin **belge kökünü (document root)** `public/` klasörüne yönlendirebiliyor musunuz kontrol edin. Yönlendiremiyorsanız, aşağıdaki B seçeneğini kullanın.
+## 2. Script'i çalıştırın
 
-## 2. GitHub'da salt-okunur bir erişim anahtarı (token) oluşturun
-
-Repo **private** olduğu için sunucudan `git clone` yapabilmek için bir token gerekiyor:
-
-1. GitHub'da sağ üstteki profil fotoğrafınıza tıklayın → **Settings** → sol menüde en altta **Developer settings** → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**.
-2. İsim verin (örn. "ilkermax-hosting"), **Repository access**'te "Only select repositories" seçip **ilkermax** reposunu seçin.
-3. **Permissions** altında **Contents: Read-only** yeterli.
-4. Oluşan token'ı (bir kere gösterilir, kopyalayın) not edin.
-
-## 3. Sunucuya bağlanıp projeyi çekin
-
-SSH ile hosting'inize bağlanın, sitenin duracağı klasöre gidin (örn. `public_html`'in üstündeki bir klasör), sonra:
+Size ayrıca gönderilen **`deploy.sh`** dosyasını SCP/SFTP ile sunucunuza kopyalayın, SSH ile bağlanıp çalıştırın:
 
 ```bash
-git clone https://<TOKEN>@github.com/yapixeltasarim-byte/ilkermax.git ilkermax
-cd ilkermax
-composer install --no-dev --optimize-autoloader
+bash deploy.sh
 ```
 
-`<TOKEN>` yerine adım 2'de aldığınız token'ı yazın. Klonlama bittikten sonra, token'ın `.git/config`'te düz yazılı kalmaması için:
+Sırayla 5 şey soracak: GitHub token, domain, MySQL veritabanı adı/kullanıcı/şifre. Sonrasında hepsini otomatik yapar: depoyu indirir, `composer install` çalıştırır, `.env`'i doldurur, veritabanını kurup demo verilerle (örnek ilanlar) doldurur, ve size özel bir admin girişi oluşturur. Sonunda ekrana **site adresi + admin giriş bilgilerinizi** yazdırır.
+
+## 3. Tek elle yapmanız gereken şey
+
+Script bittikten sonra hosting panelinizden domain'in **belge kökünü (document root)** script'in oluşturduğu klasördeki `public` alt klasörüne yönlendirin (genelde "Domains" bölümünde). Yönlendiremiyorsanız:
+
+`ilkermax` klasörünün içindekileri `public_html`'e taşıyın, `public/` içindeki her şeyi `public_html`'in köküne taşıyın, kalan `public_html/index.php`'de `__DIR__.'/../` kısımlarındaki `/../`'ı silin.
+
+Bu kadar. Site demo ilanlarla (örnek fiyat/foto/konum) açılır — gerçek ilanları admin panelden veya bottan ekleyebilirsiniz. `test@example.com` demo kullanıcısının şifresi herkese açık bir varsayılan değerdir, sadece script'in size verdiği gerçek admin hesabıyla giriş yapın.
+
+## Güncelleme (sonraki değişiklikler için)
 
 ```bash
-git remote set-url origin https://github.com/yapixeltasarim-byte/ilkermax.git
-```
-
-## 4. Belge kökünü ayarlayın
-
-**A) Belge kökünü `public/`e yönlendirebiliyorsanız**: panelden `ilkermax/public` klasörünü domain'in belge kökü yapın.
-
-**B) Yönlendiremiyorsanız**: `ilkermax` klasörünün TAMAMINI `public_html` içine taşıyın (veya oraya klonlayın), `public_html/ilkermax/public/` içindeki her şeyi `public_html`'in köküne taşıyın, kalan `public_html/index.php`'yi açıp `__DIR__.'/../` kısımlarındaki `/../`'ı silin (artık `vendor`/`bootstrap` aynı klasörde).
-
-## 5. `.env` dosyasını düzenleyin
-
-Projede gelen `.env.production` dosyasını `.env` olarak yeniden adlandırın, şu satırları **kendi bilgilerinizle** doldurun:
-
-- `APP_URL` — gerçek domain'iniz (`https://...`)
-- `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` — adım 1'de oluşturduğunuz bilgiler
-
-`APP_KEY` ve `BOT_API_KEY` zaten hazır değerlerle geliyor, dokunmanıza gerek yok. `DEPLOY_SECRET`/`FILAMENT_ADMIN_*` satırlarına SSH'la kurulumda gerek yok, silebilirsiniz.
-
-## 6. Veritabanını kurun ve demo verilerle doldurun
-
-```bash
-php artisan migrate --force
-php artisan storage:link
-php artisan db:seed --force
-```
-
-Bu, gerçek Kocaeli il/ilçe/mahalle + kategori referans verisini VE **demo amaçlı 15 örnek ilanı** (fiyat, foto, konum örnekleriyle — müşteriye "site böyle görünecek" demek için) yükler.
-
-## 7. Gerçek admin girişinizi oluşturun
-
-⚠️ **Önemli güvenlik notu:** Demo veri seed'i bir `test@example.com` kullanıcısı da oluşturur, şifresi Laravel'in **herkese açık varsayılan test şifresi** ("password") olur. Bu hesapla admin paneline kimse girmesin diye, kendi gerçek admin hesabınızı ayrıca oluşturun:
-
-```bash
-php artisan make:filament-user
-```
-
-(İsminizi, kendi e-postanızı ve güçlü bir şifre girin.) İsterseniz `test@example.com` kullanıcısını admin panelden ("Users" varsa) veya `php artisan tinker` ile silin — sadece giriş amaçlı, ilan verilerini etkilemez.
-
-## 8. Giriş yapın
-
-- **Site**: `https://SIZIN-DOMAININIZ.com`
-- **Admin panel**: `https://SIZIN-DOMAININIZ.com/admin` — adım 7'de oluşturduğunuz hesapla girin.
-
-## Güncelleme (bundan sonraki değişiklikler için)
-
-```bash
-cd ilkermax
+cd ilkermax   # veya script'te verdiğiniz klasör adı
 git pull
 composer install --no-dev --optimize-autoloader
 php artisan migrate --force
 ```
 
-## SSH yoksa (zip ile alternatif kurulum)
+## SSH'ınız yoksa
 
-SSH'sız bir hosting kullanırsanız, size ayrıca gönderilen `ilkermax-deploy.zip` dosyasını (vendor/ dahil) cPanel Dosya Yöneticisi'yle yükleyip çıkarabilir, `.env.production`'ı doldurup `.env` yapabilir, sonra tarayıcıda bir kerelik `/_deploy/<DEPLOY_SECRET>` adresini ziyaret ederek (route otomatik migrate + storage:link + **temiz** referans verisi — demo ilan İÇERMEZ — + admin kullanıcı oluşturur) kurulumu tamamlayabilirsiniz. Bu route sadece `.env`'de `DEPLOY_SECRET` tanımlıyken çalışır; kullandıktan sonra o satırı silin.
+`deploy.sh` SSH gerektirir. SSH'sız bir hosting kullanıyorsanız, ayrıca gönderilen `ilkermax-deploy.zip`'i (vendor dahil) cPanel Dosya Yöneticisi'yle yükleyip çıkarın, `.env.production`'ı `.env` yapıp doldurun, tarayıcıda bir kez `/_deploy/<DEPLOY_SECRET>` adresini açın (kılavuzun eski sürümünde detaylandırılmıştı — isterseniz tekrar yazayım).
 
 ## Sorun giderme
 
-- **500 hatası**: `.env`'deki `APP_DEBUG=true` yapıp sayfayı tekrar açın, hatayı görün, sonra tekrar `false` yapın.
-- **"could not find driver" / veritabanı hatası**: hosting'inizde PHP'nin `pdo_mysql` eklentisinin açık olduğunu kontrol edin (genelde varsayılan açıktır).
-- **Fotoğraflar görünmüyor**: `APP_URL`'in `.env`'de gerçek domain'inizle birebir aynı olduğundan emin olun.
-- **`git clone` "Authentication failed" hatası**: token'ı doğru kopyaladığınızdan ve "Contents: Read-only" iznine sahip olduğundan emin olun; token süresi dolmuş olabilir, yenisini oluşturun.
+- **500 hatası**: `.env`'de `APP_DEBUG=true` yapıp tekrar açın, hatayı görün, sonra `false`'a döndürün.
+- **Veritabanı hatası**: hosting'inizde `pdo_mysql` PHP eklentisinin açık olduğunu kontrol edin.
+- **Fotoğraflar görünmüyor**: `.env`'deki `APP_URL` gerçek domain'inizle birebir aynı olmalı.
+- **`git clone` "Authentication failed"**: token'ı doğru kopyaladığınızdan ve "Contents: Read-only" izniyle oluşturduğunuzdan emin olun.
