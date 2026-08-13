@@ -3,7 +3,6 @@
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PropertyController;
 use App\Models\Property;
-use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Spatie\Sitemap\Sitemap;
@@ -52,23 +51,11 @@ Route::get('/_deploy/{token}', function (string $token) {
     Artisan::call('storage:link');
     $output[] = 'storage:link: '.trim(Artisan::output());
 
-    Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\ProductionSeeder', '--force' => true]);
+    Artisan::call('db:seed', ['--force' => true]);
     $output[] = 'seed: '.trim(Artisan::output());
 
-    $adminEmail = env('FILAMENT_ADMIN_EMAIL');
-    $adminPassword = env('FILAMENT_ADMIN_PASSWORD');
-
-    if ($adminEmail && $adminPassword && ! User::where('email', $adminEmail)->exists()) {
-        $admin = User::create([
-            'name' => 'Admin',
-            'email' => $adminEmail,
-            'password' => $adminPassword,
-        ]);
-        $admin->forceFill(['email_verified_at' => now()])->save();
-        $output[] = "Admin kullanıcı oluşturuldu: {$adminEmail}";
-    } else {
-        $output[] = 'Admin kullanıcı oluşturulmadı (FILAMENT_ADMIN_EMAIL/PASSWORD eksik veya kullanıcı zaten var).';
-    }
+    Artisan::call('ilkermax:setup-admin');
+    $output[] = trim(Artisan::output());
 
     return response(
         "Kurulum tamamlandı.\n\n".implode("\n\n", $output).
