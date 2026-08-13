@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # İlkerMax — tek komutla hosting kurulumu.
-# Kullanım: bu dosyayı sunucuya kopyalayın (SCP/SFTP), SSH ile bağlanın, çalıştırın:
+# Bu sürüm, domain'in belge kökü DEĞİŞTİRİLEMEYEN hosting'ler için (ör. Hostinger'da
+# public_html sabit köktür). Uygulama kodu ~/ilkermax'ta durur, sadece public/
+# içeriği public_html'e kopyalanır.
+#
+# Kullanım: bu dosyayı sunucuya kopyalayın (SCP/SFTP), SSH ile bağlanıp çalıştırın:
 #   bash deploy.sh
-# Sırayla birkaç bilgi soracak (GitHub token, domain, MySQL bilgileri), gerisini otomatik yapar.
 
 set -e
 
-echo "=== İlkerMax kurulum ==="
+echo "=== İlkerMax kurulum (public_html = sabit kök) ==="
 echo
 
 read -rp "GitHub token (Contents: Read-only, ilkermax reposu için): " GH_TOKEN
@@ -15,11 +18,13 @@ read -rp "MySQL veritabanı adı: " DB_NAME
 read -rp "MySQL kullanıcı adı: " DB_USER
 read -rsp "MySQL şifresi: " DB_PASS
 echo
-read -rp "Kurulum klasör adı (varsayılan: ilkermax): " APP_DIR
-APP_DIR=${APP_DIR:-ilkermax}
+
+APP_DIR="$HOME/ilkermax"
+WEB_ROOT="$HOME/public_html"
 
 echo
 echo "→ Depo klonlanıyor..."
+rm -rf "$APP_DIR"
 git clone "https://${GH_TOKEN}@github.com/yapixeltasarim-byte/ilkermax.git" "$APP_DIR"
 cd "$APP_DIR"
 git remote set-url origin "https://github.com/yapixeltasarim-byte/ilkermax.git"
@@ -37,8 +42,21 @@ sed -i "s#^DB_PASSWORD=.*#DB_PASSWORD=${DB_PASS}#" .env
 echo "→ Veritabanı kuruluyor ve demo verilerle dolduruluyor..."
 php artisan migrate --force
 php artisan db:seed --force
-php artisan storage:link
 php artisan ilkermax:setup-admin
+
+echo "→ public_html hazırlanıyor (mevcut içerik temizlenip public/ kopyalanıyor)..."
+mkdir -p "$WEB_ROOT"
+find "$WEB_ROOT" -mindepth 1 -delete
+cp -a "$APP_DIR/public/." "$WEB_ROOT/"
+
+echo "→ index.php'deki yollar public_html'in dışındaki ilkermax klasörüne göre düzeltiliyor..."
+sed -i "s#__DIR__\.'/\.\./storage/framework/maintenance\.php'#__DIR__.'/../ilkermax/storage/framework/maintenance.php'#" "$WEB_ROOT/index.php"
+sed -i "s#__DIR__\.'/\.\./vendor/autoload\.php'#__DIR__.'/../ilkermax/vendor/autoload.php'#" "$WEB_ROOT/index.php"
+sed -i "s#__DIR__\.'/\.\./bootstrap/app\.php'#__DIR__.'/../ilkermax/bootstrap/app.php'#" "$WEB_ROOT/index.php"
+
+echo "→ Fotoğraf yükleme klasörü bağlanıyor..."
+rm -rf "$WEB_ROOT/storage"
+ln -sfn "$APP_DIR/storage/app/public" "$WEB_ROOT/storage"
 
 ADMIN_EMAIL=$(grep '^FILAMENT_ADMIN_EMAIL=' .env | cut -d= -f2-)
 ADMIN_PASSWORD=$(grep '^FILAMENT_ADMIN_PASSWORD=' .env | cut -d= -f2-)
@@ -49,9 +67,8 @@ echo "Site:        ${SITE_URL}"
 echo "Admin panel: ${SITE_URL}/admin"
 echo "Giriş:       ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}"
 echo
-echo "TEK EKSİK ADIM: Hosting panelinizden domain'in belge kökünü (document root)"
-echo "'${APP_DIR}/public' klasörüne yönlendirin (veya DEPLOY.md'deki B seçeneğini uygulayın)."
-echo
 echo "Not: 'test@example.com' kullanıcısı demo veriyle birlikte gelir, şifresi herkese"
-echo "açık bir varsayılan değerdir — admin panele SADECE yukarıdaki gerçek hesapla girin,"
-echo "isterseniz test@example.com'u sonradan silin."
+echo "açık bir varsayılan değerdir — admin panele SADECE yukarıdaki gerçek hesapla girin."
+echo
+echo "Güncelleme yapmak isterseniz: cd ~/ilkermax && git pull && composer install --no-dev"
+echo "ve sonra bu script'in public_html kopyalama kısmını tekrar çalıştırın."
