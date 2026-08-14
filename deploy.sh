@@ -21,6 +21,11 @@ echo
 APP_DIR="$HOME/ilkermax"
 WEB_ROOT="$HOME/public_html"
 
+# Script kendi APP_DIR'ini silip yeniden klonluyor; script bu klasörün
+# içinden çalıştırılırsa "rm -rf" çalışma dizinini ayağının altından
+# kaldırıp git clone'u bozar. Önce güvenli bir dizine (HOME) geçiyoruz.
+cd "$HOME"
+
 echo
 echo "→ Depo klonlanıyor..."
 rm -rf "$APP_DIR"
