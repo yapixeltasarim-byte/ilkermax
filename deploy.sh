@@ -19,7 +19,18 @@ read -rsp "MySQL şifresi: " DB_PASS
 echo
 
 APP_DIR="$HOME/ilkermax"
-WEB_ROOT="$HOME/public_html"
+
+# Hostinger'da hesabın BİRDEN FAZLA domaini varsa (addon domain), her domainin
+# gerçek doküman kökü ~/public_html DEĞİL, ~/domains/<domain>/public_html'dir.
+# ~/public_html sadece hesabın birincil/ana domainine aittir — onu KARIŞTIRMAMAK
+# için önce doğru yolu tespit ediyoruz.
+DOMAIN_HOST=$(echo "$SITE_URL" | sed -E 's#^https?://##; s#/.*$##')
+if [ -d "$HOME/domains/$DOMAIN_HOST/public_html" ]; then
+    WEB_ROOT="$HOME/domains/$DOMAIN_HOST/public_html"
+else
+    WEB_ROOT="$HOME/public_html"
+fi
+echo "→ Doküman kökü: $WEB_ROOT"
 
 # Script kendi APP_DIR'ini silip yeniden klonluyor; script bu klasörün
 # içinden çalıştırılırsa "rm -rf" çalışma dizinini ayağının altından
@@ -101,10 +112,12 @@ mkdir -p "$WEB_ROOT"
 find "$WEB_ROOT" -mindepth 1 -delete
 cp -a "$APP_DIR/public/." "$WEB_ROOT/"
 
-echo "→ index.php'deki yollar public_html'in dışındaki ilkermax klasörüne göre düzeltiliyor..."
-sed -i "s#__DIR__\.'/\.\./storage/framework/maintenance\.php'#__DIR__.'/../ilkermax/storage/framework/maintenance.php'#" "$WEB_ROOT/index.php"
-sed -i "s#__DIR__\.'/\.\./vendor/autoload\.php'#__DIR__.'/../ilkermax/vendor/autoload.php'#" "$WEB_ROOT/index.php"
-sed -i "s#__DIR__\.'/\.\./bootstrap/app\.php'#__DIR__.'/../ilkermax/bootstrap/app.php'#" "$WEB_ROOT/index.php"
+echo "→ index.php'deki yollar ilkermax klasörünün mutlak yoluna göre düzeltiliyor..."
+# Mutlak yol kullanıyoruz (göreli "../ilkermax" değil) çünkü WEB_ROOT'un HOME'a
+# göre derinliği domain'e göre değişebilir (~/public_html mi, ~/domains/x/public_html mi).
+sed -i "s#__DIR__\.'/\.\./storage/framework/maintenance\.php'#'$APP_DIR/storage/framework/maintenance.php'#" "$WEB_ROOT/index.php"
+sed -i "s#__DIR__\.'/\.\./vendor/autoload\.php'#'$APP_DIR/vendor/autoload.php'#" "$WEB_ROOT/index.php"
+sed -i "s#__DIR__\.'/\.\./bootstrap/app\.php'#'$APP_DIR/bootstrap/app.php'#" "$WEB_ROOT/index.php"
 
 echo "→ Fotoğraf yükleme klasörü bağlanıyor..."
 rm -rf "$WEB_ROOT/storage"
